@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import _ from 'lodash';
-import { unstable_batchedUpdates } from 'react-dom';
 import './App.css';
 
 export default function App(props) {
@@ -83,10 +82,9 @@ export default function App(props) {
         ...prevLibraryObject.libraries, 
         [library]: {
           ...prevLibraryObject.libraries[library],
-          [top]: {title}
+          [top]: {title, author: 'zod'}
         }
       }
-      // [libraryObject.libraries[library]]: {[top]: {title}}
     }));
 
     // urb.poke({
@@ -100,64 +98,41 @@ export default function App(props) {
     //   }
     // })
 
-    // const newLibState = libraryObject.libraries[library] = {
-    //   ...libraryObject.libraries[library],
-    //   [top]: {"title": title}
-    // }
-
-    // console.log("NLS", newLibState);
-
-    // const newState = {
-    //   ...libraryObject,
-    //   newLibState
-    // }
-
-    // console.log(libraryObject);
-
-    // const update = {}
-    // update[library] = {[top]: {title}}
-
-    // setLibraryObject({...libraryObject, ...update})
-
     console.log(libraryObject);
-    // console.log("NLS", newLibState);
-    // setLibraryObject(libraryObject);
-
   }
 
   const addDummyData = () =>{
     console.log("adding fake data");
     Object.keys(libraryObject.libraries).forEach( lib => (
       libraryObject.libraries[lib] = {
-        // ...libObject.libraries[lib],
+        ...libraryObject.libraries[lib],
         111: {title: 'Fake Book 1', author: 'zod'},
         222: {title: 'Fake Book 2', author: 'zod'},
         333: {title: 'Fake Book 3', author: 'zod'}
       }
     ));
   }
-  
+
+  if(libraryObject.libraries){
+    addDummyData();
+  }
 
   // console.log(libraryObject);
 
   //Destructuring from state object to render below, might be a better way to do this
   const libs = libraryObject.libraries ? Object.keys(libraryObject.libraries) : ["Loading Libraries"];
-  // console.log(libs);
   const books = libraryObject.libraries && selectedLib ? Object.keys(libraryObject.libraries[selectedLib]) : ["Loading Books"];
-  // console.log(books);
-
 
   return (
     <div className="App">
       <header className="App-header">
         <p>
-          Welcome to Library-UI<br/>
+          <pre>Connected Ship: {urb.ship}</pre>
           <button
             onClick={() => addDummyData()}>
             Add Dummy Data
           </button>
         </p>
-          <pre>Welcome {urb.ship}!</pre>
         <table width="100%" border="1">
           <tr>
             <td>
@@ -177,16 +152,11 @@ export default function App(props) {
               </form>
             </td>
             <td>
-              Books
+              {selectedLib ? selectedLib : "Select a Library"}
             </td>
           </tr>
           <tr>
             <td>
-              {/* {Object.keys(libs.libraries.map(lib =>(
-                <li key={lib}>
-                  {lib}
-                </li>
-              )))} */}
               {libs.map(lib =>(
                 <li>
                 <button
@@ -198,7 +168,6 @@ export default function App(props) {
               ))}              
             </td>
             <td>
-            {selectedLib ? selectedLib : null}
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -217,9 +186,13 @@ export default function App(props) {
                   <button>Add Book</button>
                 </form><br/>
               {libraryObject.libraries && selectedLib && books !== ["Loading Books"]
-              ? books.map(book => <p>{book} {libraryObject.libraries[selectedLib][book].title}</p>)
-              : "Select a library"}
-              {/* {books.map(book => book)} */}
+              ? books.map(book => 
+                <li>
+                  <button>
+                    {book} {libraryObject.libraries[selectedLib][book].title} {libraryObject.libraries[selectedLib][book].author}
+                  </button>
+                </li>)
+              : null}
             </td>
           </tr>
         </table>
