@@ -8,6 +8,7 @@ export default function App(props) {
   const [sub, setSub] = useState();
   const [selectedLib, setSelectedLib] = useState();
   const [libraryObject, setLibraryObject] = useState({Loading : "Waiting"});
+  const [fakeBooks, setFakeBooks] = useState();
 
   // useEffect(() => {
   //   async function getApi() {
@@ -19,6 +20,8 @@ export default function App(props) {
 
   // Could not figure out how to make urb available by the time UI renders with useEffect. Someone school me please
   const urb = props.api;
+
+
 
   const libObject = {libraries: {}};
   const libHandler = useCallback(
@@ -91,6 +94,19 @@ export default function App(props) {
     console.log(libraryObject);
 
   }
+
+  if(libraryObject.libraries) {
+    Object.keys(libraryObject.libraries).forEach( lib => (
+      libraryObject.libraries[lib] = {
+        // ...libObject.libraries[lib],
+        111: {title: 'Fake Book 1', author: 'zod'},
+        222: {title: 'Fake Book 2', author: 'zod'},
+        333: {title: 'Fake Book 2', author: 'zod'}
+      }
+    ));
+  }
+  
+  console.log(libraryObject);
 
   // const selectLib = (lib) => {
   //   console.log(lib);
