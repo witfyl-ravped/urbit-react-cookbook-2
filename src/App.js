@@ -20,8 +20,7 @@ export default function App(props) {
 
   // Could not figure out how to make urb available by the time UI renders with useEffect. Someone school me please
   const urb = props.api;
-
-
+  let addedData;
 
   const libObject = {libraries: {}};
   const libHandler = useCallback(
@@ -70,6 +69,26 @@ export default function App(props) {
   };
 
   const addBook = (library, title, top) => {
+    
+    if(!selectedLib){
+      window.alert("Please select library");
+      return
+    }
+
+    addedData = true;
+
+    setLibraryObject((prevLibraryObject) => ({
+      ...prevLibraryObject,
+      libraries: {
+        ...prevLibraryObject.libraries, 
+        [library]: {
+          ...prevLibraryObject.libraries[library],
+          [top]: {title}
+        }
+      }
+      // [libraryObject.libraries[library]]: {[top]: {title}}
+    }));
+
     // urb.poke({
     //   app: 'library-proxy',
     //   mark: 'library-frontend',
@@ -81,48 +100,62 @@ export default function App(props) {
     //   }
     // })
 
-    if(!selectedLib){
-      window.alert("Please select library");
-      return
-    }
+    // const newLibState = libraryObject.libraries[library] = {
+    //   ...libraryObject.libraries[library],
+    //   [top]: {"title": title}
+    // }
 
-    libraryObject.libraries[library] = {
-      ...libraryObject.libraries[library],
-      [top]: {"title": title}
-    }
+    // console.log("NLS", newLibState);
+
+    // const newState = {
+    //   ...libraryObject,
+    //   newLibState
+    // }
+
+    // console.log(libraryObject);
+
+    // const update = {}
+    // update[library] = {[top]: {title}}
+
+    // setLibraryObject({...libraryObject, ...update})
 
     console.log(libraryObject);
+    // console.log("NLS", newLibState);
+    // setLibraryObject(libraryObject);
 
   }
 
-  if(libraryObject.libraries) {
+  const addDummyData = () =>{
+    console.log("adding fake data");
     Object.keys(libraryObject.libraries).forEach( lib => (
       libraryObject.libraries[lib] = {
         // ...libObject.libraries[lib],
         111: {title: 'Fake Book 1', author: 'zod'},
         222: {title: 'Fake Book 2', author: 'zod'},
-        333: {title: 'Fake Book 2', author: 'zod'}
+        333: {title: 'Fake Book 3', author: 'zod'}
       }
     ));
   }
   
-  console.log(libraryObject);
-
-  // const selectLib = (lib) => {
-  //   console.log(lib);
-  //   setSelectedLib(lib);
-  // }
 
   // console.log(libraryObject);
-  const libs = libraryObject.libraries ? Object.keys(libraryObject.libraries) : ["Loading"];
-  console.log(libs);
+
+  //Destructuring from state object to render below, might be a better way to do this
+  const libs = libraryObject.libraries ? Object.keys(libraryObject.libraries) : ["Loading Libraries"];
+  // console.log(libs);
+  const books = libraryObject.libraries && selectedLib ? Object.keys(libraryObject.libraries[selectedLib]) : ["Loading Books"];
+  // console.log(books);
 
 
   return (
     <div className="App">
       <header className="App-header">
         <p>
-          Welcome to Library-UI
+          Welcome to Library-UI<br/>
+          <button
+            onClick={() => addDummyData()}>
+            Add Dummy Data
+          </button>
         </p>
           <pre>Welcome {urb.ship}!</pre>
         <table width="100%" border="1">
@@ -182,7 +215,11 @@ export default function App(props) {
                     name="top"
                     placeholder="ISBN"/><br/>
                   <button>Add Book</button>
-                </form>
+                </form><br/>
+              {libraryObject.libraries && selectedLib && books !== ["Loading Books"]
+              ? books.map(book => <p>{book} {libraryObject.libraries[selectedLib][book].title}</p>)
+              : "Select a library"}
+              {/* {books.map(book => book)} */}
             </td>
           </tr>
         </table>
