@@ -41,18 +41,33 @@ export default function App(props) {
     }, [libraryObject]
   )
 
+  // useEffect(() => {
+  //   urb.subscribe({
+  //     app: 'library-proxy',
+  //     path: '/libraries',
+  //     event: libHandler,
+  //     err: console.log,
+  //     quit: console.log,
+  //   })
+  //   .then((subscriptionId) => {
+  //     setSub(subscriptionId);
+  //   });
+  // }, []);
+
   useEffect(() => {
     urb.subscribe({
-      app: 'library-proxy',
-      path: '/libraries',
-      event: libHandler,
+      app: 'graph-store',
+      path: '/updates',
+      // event: libHandler,
       err: console.log,
       quit: console.log,
     })
-    .then((subscriptionId) => {
-      setSub(subscriptionId);
-    });
+    .then(data => console.log("what?", data));
+    // .then((subscriptionId) => {
+    //   setSub(subscriptionId);
+    // });
   }, []);
+
 
   const addLibrary = (library) => {
     urb.poke({
@@ -67,7 +82,7 @@ export default function App(props) {
     });
   };
 
-  const addBook = (library, title, top) => {
+  const addBook = (library, title, isbn) => {
     
     if(!selectedLib){
       window.alert("Please select library");
@@ -82,7 +97,7 @@ export default function App(props) {
         ...prevLibraryObject.libraries, 
         [library]: {
           ...prevLibraryObject.libraries[library],
-          [top]: {title, author: 'zod'}
+          [isbn]: {title, author: 'zod'}
         }
       }
     }));
@@ -93,7 +108,7 @@ export default function App(props) {
     //   json: {
     //     'add-book': {
     //       'library': library,
-    //       'book': [title, top]
+    //       'book': [title, isbn]
     //     }
     //   }
     // })
@@ -172,16 +187,16 @@ export default function App(props) {
                   onSubmit={(e) => {
                     e.preventDefault();
                     const title = e.target.title.value;
-                    const top = e.target.top.value;
-                    addBook(selectedLib, title, top);
+                    const isbn = e.target.isbn.value;
+                    addBook(selectedLib, title, isbn);
                   }}>
                   <input
                     type="title"
                     name="title"
                     placeholder="Title"/><br/>
                   <input
-                    type="top"
-                    name="top"
+                    type="isbn"
+                    name="isbn"
                     placeholder="ISBN"/><br/>
                   <button>Add Book</button>
                 </form><br/>
