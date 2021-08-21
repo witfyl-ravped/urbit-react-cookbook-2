@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import _ from 'lodash';
 import './App.css';
 
 export default function App(props) {
@@ -21,25 +20,25 @@ export default function App(props) {
   const urb = props.api;
   let addedData;
 
-  const libObject = {libraries: {}};
-  const libHandler = useCallback(
-    (cbArray) => {
+  // const libObject = {libraries: {}};
+  // const libHandler = useCallback(
+  //   (cbArray) => {
 
-      cbArray.forEach(lib => (
-        libObject.libraries[lib] = {
-          // Book1: {
-          //   Author: 'zod'
-          // },
-          // Policy: {
-          //   Whitelist: [
-          //     'zod', 'mus', 'nus'
-          //   ]
-          // }
-        })
-      );
-      setLibraryObject(libObject)
-    }, [libraryObject]
-  )
+  //     cbArray.forEach(lib => (
+  //       libObject.libraries[lib] = {
+  //         // Book1: {
+  //         //   Author: 'zod'
+  //         // },
+  //         // Policy: {
+  //         //   Whitelist: [
+  //         //     'zod', 'mus', 'nus'
+  //         //   ]
+  //         // }
+  //       })
+  //     );
+  //     setLibraryObject(libObject)
+  //   }, [libraryObject]
+  // )
 
   // useEffect(() => {
   //   urb.subscribe({
@@ -54,20 +53,75 @@ export default function App(props) {
   //   });
   // }, []);
 
+  // atoms of @tas for meta and comments identifiers
+  const metaId = 1635018093;
+  const commentsId = 8319395793566789475;
+  
+  let libraries = {};
+  let newBook = {};
+  libraries["Fake Lib"] = "Aren't we all?"
+
+  const updateHandler = useCallback(
+    (update) => {
+      console.log(update)
+
+      console.log(Object.keys(libraries));
+
+      // Check if new graph is a library
+      if(update['graph-update']['add-graph'] && update['graph-update']['add-graph']['mark'] == "graph-validator-library"){
+        const newLib = update['graph-update']['add-graph']['resource'];
+
+        console.log("Name check:", newLib.name);  
+        console.log("New Library", newLib);
+  
+        libraries = {
+          ...libraries,
+          [newLib.name]: newLib
+        }
+
+        console.log(`Added ${newLib.name} to libraries`, libraries)
+      }
+
+      // Check if new add-nodes is a book
+      if(update['graph-update']['add-nodes'] && Object.keys(libraries).includes(update['graph-update']['add-nodes'].resource.name)){
+        const nodes = update['graph-update']['add-nodes'].nodes;
+        const newBookLib = update['graph-update']['add-nodes'].resource.name;
+
+        console.log(nodes);
+
+        Object.keys(nodes).forEach(
+          node => {
+            if(nodes[node].post.contents.length == 2){
+              newBook = {
+                ...newBook,
+                [nodes[node].post.contents[0].text]: {
+                  top: node.substr(1, 39),
+                  isbn: nodes[node].post.contents[1].text,
+                  comments: {}
+                }
+              }
+            }
+          }
+        )
+
+        console.log("New Book", newBook);
+        libraries[newBookLib] = newBook;
+        console.log(`Added Book ${newBook.name} to library ${libraries[newBookLib]}`, libraries);
+      }
+    },[]);
+
   useEffect(() => {
     urb.subscribe({
       app: 'graph-store',
       path: '/updates',
-      // event: libHandler,
+      event: updateHandler,
       err: console.log,
       quit: console.log,
     })
-    .then(data => console.log("what?", data));
-    // .then((subscriptionId) => {
-    //   setSub(subscriptionId);
-    // });
+    .then((subscriptionId) => {
+      setSub(subscriptionId);
+    });
   }, []);
-
 
   const addLibrary = (library) => {
     urb.poke({
@@ -113,7 +167,7 @@ export default function App(props) {
     //   }
     // })
 
-    console.log(libraryObject);
+    // console.log(libraryObject);
   }
 
   const addDummyData = () =>{
