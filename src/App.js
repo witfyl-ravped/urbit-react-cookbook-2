@@ -20,46 +20,86 @@ export default function App(props) {
   const urb = props.api;
   let addedData;
 
-  // const libObject = {libraries: {}};
-  // const libHandler = useCallback(
-  //   (cbArray) => {
+  const libObject = {libraries: {}};
+  const libHandler = useCallback(
+    (cbArray) => {
 
-  //     cbArray.forEach(lib => (
-  //       libObject.libraries[lib] = {
-  //         // Book1: {
-  //         //   Author: 'zod'
-  //         // },
-  //         // Policy: {
-  //         //   Whitelist: [
-  //         //     'zod', 'mus', 'nus'
-  //         //   ]
-  //         // }
-  //       })
-  //     );
-  //     setLibraryObject(libObject)
-  //   }, [libraryObject]
-  // )
+      cbArray.forEach(lib => {
+        if(!lib.includes(" ")) {
+          urb.scry({
+            app: 'graph-store',
+            path: `/graph/~zod/${lib}`
+          })
+          .then(libGraph =>(
+            libObject.libraries[libGraph.['graph-update']['add-graph'].resource.name] = libGraph['graph-update']['add-graph'].resource
+          ));
+        }
+      }
+      );
+      // setLibraryObject(libObject)
+      console.log("libObject", libObject);
+    }, []
+  )
 
-  // useEffect(() => {
-  //   urb.subscribe({
-  //     app: 'library-proxy',
-  //     path: '/libraries',
-  //     event: libHandler,
-  //     err: console.log,
-  //     quit: console.log,
-  //   })
-  //   .then((subscriptionId) => {
-  //     setSub(subscriptionId);
-  //   });
-  // }, []);
+  useEffect(() => {
+    // urb.subscribe({
+    //   app: 'library-proxy',
+    //   path: '/libraries',
+    //   event: libHandler,
+    //   err: console.log,
+    //   quit: console.log,
+    // })
+    // .then((subscriptionId) => {
+    //   setSub(subscriptionId);
+    // });
 
+    urb.scry({
+      app: 'graph-store',
+      path: '/keys'
+    })
+    .then(keys => {
+      console.log(keys)
+      console.log(keys['graph-update'])
+      keys['graph-update'].keys.forEach(key => {
+        if(!key.name.includes(" ")){
+          // console.log(key);
+          scryKey(key.name);
+        }
+      })
+    });
+  }, []);
+
+  const scryKey = (key) => {
+    console.log("Scrying key", key);
+    urb.scry({
+      app: 'graph-store',
+      path: `/graph/~zod/${key}`
+    })
+    .then(graph => {
+      console.log(graph)
+      if(graph['graph-update']['add-graph'].mark == "graph-validator-library") {
+        console.log(`${graph['graph-update']['add-graph'].resource.name} is a library`);
+
+        //Library found, push add to libObject
+        libObject.libraries[graph['graph-update']['add-graph'].resource.name] = {
+          name: graph['graph-update']['add-graph'].resource.name,
+          ship: graph['graph-update']['add-graph'].resource.ship,
+          // index: Object.keys(graph['graph-update']['add-graph'].graph)  not sure how to get library index yet, might not need it
+        }
+
+        setLibraryObject(libObject);
+      }
+    })
+  }
+  
   // atoms of @tas for meta and comments identifiers
   const metaId = 1635018093;
   const commentsId = 8319395793566789475;
   
   let libraries = {};
   let newBook = {};
-  libraries["Fake Lib"] = "Aren't we all?"
+
+  // This section monitors updates that happen after page loads
 
   const updateHandler = useCallback(
     (update) => {
@@ -170,23 +210,22 @@ export default function App(props) {
     // console.log(libraryObject);
   }
 
-  const addDummyData = () =>{
-    console.log("adding fake data");
-    Object.keys(libraryObject.libraries).forEach( lib => (
-      libraryObject.libraries[lib] = {
-        ...libraryObject.libraries[lib],
-        111: {title: 'Fake Book 1', author: 'zod'},
-        222: {title: 'Fake Book 2', author: 'zod'},
-        333: {title: 'Fake Book 3', author: 'zod'}
-      }
-    ));
-  }
+  // Add dummy data for testing
+  // const addDummyData = () =>{
+  //   console.log("adding fake data");
+  //   Object.keys(libraryObject.libraries).forEach( lib => (
+  //     libraryObject.libraries[lib] = {
+  //       ...libraryObject.libraries[lib],
+  //       111: {title: 'Fake Book 1', author: 'zod'},
+  //       222: {title: 'Fake Book 2', author: 'zod'},
+  //       333: {title: 'Fake Book 3', author: 'zod'}
+  //     }
+  //   ));
+  // }
 
-  if(libraryObject.libraries){
-    addDummyData();
-  }
-
-  // console.log(libraryObject);
+  // if(libraryObject.libraries){
+  //   addDummyData();
+  // }
 
   //Destructuring from state object to render below, might be a better way to do this
   const libs = libraryObject.libraries ? Object.keys(libraryObject.libraries) : ["Loading Libraries"];
@@ -197,10 +236,10 @@ export default function App(props) {
       <header className="App-header">
         <p>
           <pre>Connected Ship: {urb.ship}</pre>
-          <button
+          {/* <button
             onClick={() => addDummyData()}>
             Add Dummy Data
-          </button>
+          </button> */}
         </p>
         <table width="100%" border="1">
           <tr>
