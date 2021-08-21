@@ -18,8 +18,8 @@ export default function App(props) {
       path: '/keys'
     })
     .then(keys => {
-      console.log(keys)
-      console.log(keys['graph-update'])
+      // console.log(keys)
+      // console.log(keys['graph-update'])
       keys['graph-update'].keys.forEach(key => {
         if(!key.name.includes(" ")){
           // console.log(key);
@@ -30,21 +30,15 @@ export default function App(props) {
   }, []);
 
   const scryKey = (key) => {
-    console.log("Scrying key", key);
+    // console.log("Scrying key", key);
     urb.scry({
       app: 'graph-store',
       path: `/graph/~zod/${key}`
     })
     .then(graph => {
-      console.log(graph)
-      if(graph['graph-update']['add-graph'].mark == "graph-validator-library") {
-        console.log(`${graph['graph-update']['add-graph'].resource.name} is a library`);
-
-        // libObject.libraries[graph['graph-update']['add-graph'].resource.name] = {
-        //   name: graph['graph-update']['add-graph'].resource.name,
-        //   ship: graph['graph-update']['add-graph'].resource.ship,
-        //   // index: Object.keys(graph['graph-update']['add-graph'].graph)  not sure how to get library index yet, might not need it
-        // }
+      // console.log(graph)
+      if(graph['graph-update']['add-graph'].mark === "graph-validator-library") {
+        // console.log(`${graph['graph-update']['add-graph'].resource.name} is a library`);
 
         //Library found, add to library state object
         setLibraryObject((prevLibraryObject) => ({
@@ -52,12 +46,48 @@ export default function App(props) {
           libraries: {
             ...prevLibraryObject.libraries,
             [graph['graph-update']['add-graph'].resource.name]: {
-              name: [graph['graph-update']['add-graph'].resource.name],
-              ship: [graph['graph-update']['add-graph'].resource.ship]
+              name: graph['graph-update']['add-graph'].resource.name,
+              ship: graph['graph-update']['add-graph'].resource.ship,
             }
           }
         }));
+
+        if(Object.keys(graph['graph-update']['add-graph'].graph).length > 0) {
+          addBooks(graph);
+        }
       }
+    })
+  }
+
+  const addBooks = (graph) => {
+    console.log(graph);
+
+    Object.keys(graph['graph-update']['add-graph'].graph).forEach(index => {
+      const bookName = graph['graph-update']['add-graph'].graph[index].children[metaId].children[1].post.contents[0].text;
+      const ISBN = graph['graph-update']['add-graph'].graph[index].children[metaId].children[1].post.contents[1].text;
+      const destinationLibrary = graph['graph-update']['add-graph'].resource.name;
+
+      console.log(
+        `Library: ${destinationLibrary} Book: ${bookName} ISBN: ${ISBN}`
+      )
+
+      setLibraryObject((previousLibraryObject) => ({
+        ...previousLibraryObject,
+        libraries: {
+          ...previousLibraryObject.libraries,
+          [destinationLibrary]: {
+            ...previousLibraryObject.libraries[destinationLibrary],
+            books: {
+              ...previousLibraryObject.libraries[destinationLibrary].books,
+              [index]: {
+                title: bookName,
+                isbn: ISBN
+              }
+            }
+          }
+        }
+      }))
+
     })
   }
   
@@ -72,23 +102,23 @@ export default function App(props) {
 
   const updateHandler = useCallback(
     (update) => {
-      console.log(update)
+      // console.log(update)
 
-      console.log(Object.keys(libraries));
+      // console.log(Object.keys(libraries));
 
       // Check if new graph is a library
       if(update['graph-update']['add-graph'] && update['graph-update']['add-graph']['mark'] == "graph-validator-library"){
         const newLib = update['graph-update']['add-graph']['resource'];
 
-        console.log("Name check:", newLib.name);  
-        console.log("New Library", newLib);
+        // console.log("Name check:", newLib.name);  
+        // console.log("New Library", newLib);
   
         libraries = {
           ...libraries,
           [newLib.name]: newLib
         }
 
-        console.log(`Added ${newLib.name} to libraries`, libraries)
+        // console.log(`Added ${newLib.name} to libraries`, libraries)
       }
 
       // Check if new add-nodes is a book
@@ -96,7 +126,7 @@ export default function App(props) {
         const nodes = update['graph-update']['add-nodes'].nodes;
         const newBookLib = update['graph-update']['add-nodes'].resource.name;
 
-        console.log(nodes);
+        // console.log(nodes);
 
         Object.keys(nodes).forEach(
           node => {
@@ -113,9 +143,9 @@ export default function App(props) {
           }
         )
 
-        console.log("New Book", newBook);
+        // console.log("New Book", newBook);
         libraries[newBookLib] = newBook;
-        console.log(`Added Book ${newBook.name} to library ${libraries[newBookLib]}`, libraries);
+        // console.log(`Added Book ${newBook.name} to library ${libraries[newBookLib]}`, libraries);
       }
     },[]);
 
@@ -146,8 +176,7 @@ export default function App(props) {
   };
 
   //Destructuring from state object to render below, might be a better way to do this
-  const libs = libraryObject.libraries ? Object.keys(libraryObject.libraries) : ["Loading Libraries"];
-  console.log("Libs:", libs);
+  // const libs = libraryObject.libraries ? Object.keys(libraryObject.libraries) : ["Loading Libraries"];
   const books = libraryObject.libraries && selectedLib ? Object.keys(libraryObject.libraries[selectedLib]) : ["Loading Books"];
 
   return (
