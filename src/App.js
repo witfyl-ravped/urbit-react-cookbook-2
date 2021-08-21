@@ -10,8 +10,13 @@ export default function App(props) {
   // Could not figure out how to make urb available by the time UI renders with useEffect. Someone school me please
   const urb = props.api;
 
-  const libObject = {libraries: {}};
+  // atoms of @tas for meta and comments identifiers
+  const metaId = 1635018093;
+  const commentsId = 8319395793566789475;
 
+  // *** This section populates React state from graph-store scries
+
+  // Scry to get graph-store keys 
   useEffect(() => {
     urb.scry({
       app: 'graph-store',
@@ -29,6 +34,7 @@ export default function App(props) {
     });
   }, []);
 
+  // Checks keys from useEffect scry to see if they are libraries and adds reduced graph to state object if yes
   const scryKey = (key) => {
     // console.log("Scrying key", key);
     urb.scry({
@@ -37,10 +43,12 @@ export default function App(props) {
     })
     .then(graph => {
       // console.log(graph)
+      
+      // Checks for library validator mark
       if(graph['graph-update']['add-graph'].mark === "graph-validator-library") {
         // console.log(`${graph['graph-update']['add-graph'].resource.name} is a library`);
 
-        //Library found, add to library state object
+        // Add to library state object
         setLibraryObject((prevLibraryObject) => ({
           ...prevLibraryObject,
           libraries: {
@@ -52,25 +60,39 @@ export default function App(props) {
           }
         }));
 
+        // Checks to see if library has books
         if(Object.keys(graph['graph-update']['add-graph'].graph).length > 0) {
-          addBooks(graph);
+          addBooksToState(graph);
         }
       }
     })
   }
 
-  const addBooks = (graph) => {
-    console.log(graph);
+  const addBooksToState = (graph) => {
+    // console.log(graph);
 
     Object.keys(graph['graph-update']['add-graph'].graph).forEach(index => {
+      // Destructure basic info from book entry
       const bookName = graph['graph-update']['add-graph'].graph[index].children[metaId].children[1].post.contents[0].text;
       const ISBN = graph['graph-update']['add-graph'].graph[index].children[metaId].children[1].post.contents[1].text;
       const destinationLibrary = graph['graph-update']['add-graph'].resource.name;
+      let comments;
 
-      console.log(
-        `Library: ${destinationLibrary} Book: ${bookName} ISBN: ${ISBN}`
-      )
+      // Check if book has comments and add them to comments object
+      if(graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children){
+        Object.keys(graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children).forEach(
+          key => (
+            comments = {
+              ...comments,
+              [key]: graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children[key].post.contents[0].text
+            }
+          )
+        )
+      } else {
+        comments = "No comments yet";
+      }
 
+      // Commit reduced graph info to state
       setLibraryObject((previousLibraryObject) => ({
         ...previousLibraryObject,
         libraries: {
@@ -81,7 +103,8 @@ export default function App(props) {
               ...previousLibraryObject.libraries[destinationLibrary].books,
               [index]: {
                 title: bookName,
-                isbn: ISBN
+                isbn: ISBN,
+                comments
               }
             }
           }
@@ -90,43 +113,29 @@ export default function App(props) {
 
     })
   }
-  
-  // atoms of @tas for meta and comments identifiers
-  const metaId = 1635018093;
-  const commentsId = 8319395793566789475;
-  
-  let libraries = {};
-  let newBook = {};
 
   // This section monitors updates that happen after page loads
+  let newLibraries = {};
+  let newBook = {};
 
   const updateHandler = useCallback(
     (update) => {
-      // console.log(update)
-
-      // console.log(Object.keys(libraries));
 
       // Check if new graph is a library
       if(update['graph-update']['add-graph'] && update['graph-update']['add-graph']['mark'] == "graph-validator-library"){
         const newLib = update['graph-update']['add-graph']['resource'];
-
-        // console.log("Name check:", newLib.name);  
-        // console.log("New Library", newLib);
   
-        libraries = {
-          ...libraries,
+      // If so then add to local library object to check against books below
+        newLibraries = {
+          ...newLibraries,
           [newLib.name]: newLib
         }
-
-        // console.log(`Added ${newLib.name} to libraries`, libraries)
       }
 
       // Check if new add-nodes is a book
-      if(update['graph-update']['add-nodes'] && Object.keys(libraries).includes(update['graph-update']['add-nodes'].resource.name)){
+      if(update['graph-update']['add-nodes'] && Object.keys(newLibraries).includes(update['graph-update']['add-nodes'].resource.name)){
         const nodes = update['graph-update']['add-nodes'].nodes;
         const newBookLib = update['graph-update']['add-nodes'].resource.name;
-
-        // console.log(nodes);
 
         Object.keys(nodes).forEach(
           node => {
@@ -143,9 +152,7 @@ export default function App(props) {
           }
         )
 
-        // console.log("New Book", newBook);
-        libraries[newBookLib] = newBook;
-        // console.log(`Added Book ${newBook.name} to library ${libraries[newBookLib]}`, libraries);
+        newLibraries[newBookLib] = newBook;
       }
     },[]);
 
@@ -162,7 +169,9 @@ export default function App(props) {
     });
   }, []);
 
-  const addLibrary = (library) => {
+  // These functions called by the user to interact with Urbit ship
+
+  const createLibrary = (library) => {
     urb.poke({
       app: 'library-proxy', 
       mark: 'library-frontend', 
@@ -175,35 +184,21 @@ export default function App(props) {
     });
   };
 
-  //Destructuring from state object to render below, might be a better way to do this
-  // const libs = libraryObject.libraries ? Object.keys(libraryObject.libraries) : ["Loading Libraries"];
-
-  // const bookIndexes = libraryObject.libraries && selectedLib 
-  //   ? Object.keys(libraryObject.libraries[selectedLib].books).forEach(index => {
-  //         libraryObject.libraries[selectedLib].books[index].title
-  //     })
-  //   : ["Loading Books"];
-  // console.log(bookIndexes);
-  // const books = ['Read me'];
-
   return (
     <div className="App">
       <header className="App-header">
         <p>
           <pre>Connected Ship: {urb.ship}</pre>
-          {/* <button
-            onClick={() => addDummyData()}>
-            Add Dummy Data
-          </button> */}
         </p>
         <table width="100%" border="1">
           <tr>
             <td>
+              {/* Form to create library */}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   const library = e.target.library.value;
-                  addLibrary(library);
+                  createLibrary(library);
                 }}>
               <input
                 type="library"
@@ -215,11 +210,13 @@ export default function App(props) {
               </form>
             </td>
             <td>
-              {selectedLib ? selectedLib : "Select a Library"}
+              {/* Display selected library over books component */}
+              <pre>{selectedLib ? selectedLib : "Select a Library"}</pre>
             </td>
           </tr>
           <tr>
             <td>
+              {/* Create a list of existing libraries for user to explore */}
               {libraryObject.libraries ? Object.keys(libraryObject.libraries).map(lib =>(
                 <li>
                 <button
@@ -232,37 +229,52 @@ export default function App(props) {
               : "Loading..."}
             </td>
             <td>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const title = e.target.title.value;
-                    const isbn = e.target.isbn.value;
-                    // addBook(selectedLib, title, isbn);
-                    console.log("Add book with");
-                  }}>
-                  <input
-                    type="title"
-                    name="title"
-                    placeholder="Title"/><br/>
-                  <input
-                    type="isbn"
-                    name="isbn"
-                    placeholder="ISBN"/><br/>
-                  <button>Add Book</button>
-                </form><br/>
+              {/* Books component */}
               {libraryObject.libraries && selectedLib
-                ? Object.keys(libraryObject.libraries[selectedLib].books).map(index => (
-                    <li> 
+                ? <>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const title = e.target.title.value;
+                        const isbn = e.target.isbn.value;
+                        // addBook(selectedLib, title, isbn);
+                        console.log("Add book with");
+                      }}>
+                      <input
+                        type="title"
+                        name="title"
+                        placeholder="Title"/><br/>
+                      <input
+                        type="isbn"
+                        name="isbn"
+                        placeholder="ISBN"/><br/>
                       <button
-                        onClick={() => window.alert(`Comments for ${libraryObject.libraries[selectedLib].books[index].title}`)}
-                      >
-                        Title: {libraryObject.libraries[selectedLib].books[index].title}&nbsp;
-                        ISBN: {libraryObject.libraries[selectedLib].books[index].isbn}
-                      </button>
-                    </li>
-                ))
+                      onClick={() => window.alert("Add book function")}
+                      >Add Book</button>
+                    </form>
+                    <br/>
+                    {Object.keys(libraryObject.libraries[selectedLib].books).map(index => (
+                      <li> 
+                        <button
+                          onClick={() => window.alert(`Comments for ${libraryObject.libraries[selectedLib].books[index].title}`)}
+                        >
+                          Title: {libraryObject.libraries[selectedLib].books[index].title}&nbsp;
+                          ISBN: {libraryObject.libraries[selectedLib].books[index].isbn}
+                        </button>
+                      </li>
+                    ))}
+                  </>
                 : null}
               <br/>
+            </td>
+          </tr>
+        </table>
+        <table width="100%" border="1">
+          <tr>
+            <td>
+              <pre>
+                Comments
+              </pre>
             </td>
           </tr>
         </table>
