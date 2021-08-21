@@ -177,7 +177,14 @@ export default function App(props) {
 
   //Destructuring from state object to render below, might be a better way to do this
   // const libs = libraryObject.libraries ? Object.keys(libraryObject.libraries) : ["Loading Libraries"];
-  const books = libraryObject.libraries && selectedLib ? Object.keys(libraryObject.libraries[selectedLib]) : ["Loading Books"];
+
+  // const bookIndexes = libraryObject.libraries && selectedLib 
+  //   ? Object.keys(libraryObject.libraries[selectedLib].books).forEach(index => {
+  //         libraryObject.libraries[selectedLib].books[index].title
+  //     })
+  //   : ["Loading Books"];
+  // console.log(bookIndexes);
+  // const books = ['Read me'];
 
   return (
     <div className="App">
@@ -243,14 +250,19 @@ export default function App(props) {
                     placeholder="ISBN"/><br/>
                   <button>Add Book</button>
                 </form><br/>
-              {libraryObject.libraries && selectedLib && books !== ["Loading Books"]
-              ? books.map(book => 
-                <li>
-                  <button>
-                    {book} {libraryObject.libraries[selectedLib][book].title} {libraryObject.libraries[selectedLib][book].author}
-                  </button>
-                </li>)
-              : null}
+              {libraryObject.libraries && selectedLib
+                ? Object.keys(libraryObject.libraries[selectedLib].books).map(index => (
+                    <li> 
+                      <button
+                        onClick={() => window.alert(`Comments for ${libraryObject.libraries[selectedLib].books[index].title}`)}
+                      >
+                        Title: {libraryObject.libraries[selectedLib].books[index].title}&nbsp;
+                        ISBN: {libraryObject.libraries[selectedLib].books[index].isbn}
+                      </button>
+                    </li>
+                ))
+                : null}
+              <br/>
             </td>
           </tr>
         </table>
