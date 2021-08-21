@@ -6,53 +6,13 @@ export default function App(props) {
   const [sub, setSub] = useState();
   const [selectedLib, setSelectedLib] = useState();
   const [libraryObject, setLibraryObject] = useState({Loading : "Waiting"});
-  const [fakeBooks, setFakeBooks] = useState();
-
-  // useEffect(() => {
-  //   async function getApi() {
-  //     // const api = await createApi();
-  //     setUrb(props.api);
-  //   }
-  //   getApi();
-  // }, []);
 
   // Could not figure out how to make urb available by the time UI renders with useEffect. Someone school me please
   const urb = props.api;
-  let addedData;
 
   const libObject = {libraries: {}};
-  const libHandler = useCallback(
-    (cbArray) => {
-
-      cbArray.forEach(lib => {
-        if(!lib.includes(" ")) {
-          urb.scry({
-            app: 'graph-store',
-            path: `/graph/~zod/${lib}`
-          })
-          .then(libGraph =>(
-            libObject.libraries[libGraph.['graph-update']['add-graph'].resource.name] = libGraph['graph-update']['add-graph'].resource
-          ));
-        }
-      }
-      );
-      // setLibraryObject(libObject)
-      console.log("libObject", libObject);
-    }, []
-  )
 
   useEffect(() => {
-    // urb.subscribe({
-    //   app: 'library-proxy',
-    //   path: '/libraries',
-    //   event: libHandler,
-    //   err: console.log,
-    //   quit: console.log,
-    // })
-    // .then((subscriptionId) => {
-    //   setSub(subscriptionId);
-    // });
-
     urb.scry({
       app: 'graph-store',
       path: '/keys'
@@ -80,14 +40,23 @@ export default function App(props) {
       if(graph['graph-update']['add-graph'].mark == "graph-validator-library") {
         console.log(`${graph['graph-update']['add-graph'].resource.name} is a library`);
 
-        //Library found, push add to libObject
-        libObject.libraries[graph['graph-update']['add-graph'].resource.name] = {
-          name: graph['graph-update']['add-graph'].resource.name,
-          ship: graph['graph-update']['add-graph'].resource.ship,
-          // index: Object.keys(graph['graph-update']['add-graph'].graph)  not sure how to get library index yet, might not need it
-        }
+        // libObject.libraries[graph['graph-update']['add-graph'].resource.name] = {
+        //   name: graph['graph-update']['add-graph'].resource.name,
+        //   ship: graph['graph-update']['add-graph'].resource.ship,
+        //   // index: Object.keys(graph['graph-update']['add-graph'].graph)  not sure how to get library index yet, might not need it
+        // }
 
-        setLibraryObject(libObject);
+        //Library found, add to library state object
+        setLibraryObject((prevLibraryObject) => ({
+          ...prevLibraryObject,
+          libraries: {
+            ...prevLibraryObject.libraries,
+            [graph['graph-update']['add-graph'].resource.name]: {
+              name: [graph['graph-update']['add-graph'].resource.name],
+              ship: [graph['graph-update']['add-graph'].resource.ship]
+            }
+          }
+        }));
       }
     })
   }
@@ -176,59 +145,9 @@ export default function App(props) {
     });
   };
 
-  const addBook = (library, title, isbn) => {
-    
-    if(!selectedLib){
-      window.alert("Please select library");
-      return
-    }
-
-    addedData = true;
-
-    setLibraryObject((prevLibraryObject) => ({
-      ...prevLibraryObject,
-      libraries: {
-        ...prevLibraryObject.libraries, 
-        [library]: {
-          ...prevLibraryObject.libraries[library],
-          [isbn]: {title, author: 'zod'}
-        }
-      }
-    }));
-
-    // urb.poke({
-    //   app: 'library-proxy',
-    //   mark: 'library-frontend',
-    //   json: {
-    //     'add-book': {
-    //       'library': library,
-    //       'book': [title, isbn]
-    //     }
-    //   }
-    // })
-
-    // console.log(libraryObject);
-  }
-
-  // Add dummy data for testing
-  // const addDummyData = () =>{
-  //   console.log("adding fake data");
-  //   Object.keys(libraryObject.libraries).forEach( lib => (
-  //     libraryObject.libraries[lib] = {
-  //       ...libraryObject.libraries[lib],
-  //       111: {title: 'Fake Book 1', author: 'zod'},
-  //       222: {title: 'Fake Book 2', author: 'zod'},
-  //       333: {title: 'Fake Book 3', author: 'zod'}
-  //     }
-  //   ));
-  // }
-
-  // if(libraryObject.libraries){
-  //   addDummyData();
-  // }
-
   //Destructuring from state object to render below, might be a better way to do this
   const libs = libraryObject.libraries ? Object.keys(libraryObject.libraries) : ["Loading Libraries"];
+  console.log("Libs:", libs);
   const books = libraryObject.libraries && selectedLib ? Object.keys(libraryObject.libraries[selectedLib]) : ["Loading Books"];
 
   return (
@@ -265,7 +184,7 @@ export default function App(props) {
           </tr>
           <tr>
             <td>
-              {libs.map(lib =>(
+              {libraryObject.libraries ? Object.keys(libraryObject.libraries).map(lib =>(
                 <li>
                 <button
                   onClick={() => setSelectedLib(lib)}
@@ -273,7 +192,8 @@ export default function App(props) {
                     {lib}
                 </button>
                 </li>
-              ))}              
+              ))
+              : "Loading..."}
             </td>
             <td>
                 <form
@@ -281,7 +201,8 @@ export default function App(props) {
                     e.preventDefault();
                     const title = e.target.title.value;
                     const isbn = e.target.isbn.value;
-                    addBook(selectedLib, title, isbn);
+                    // addBook(selectedLib, title, isbn);
+                    console.log("Add book with");
                   }}>
                   <input
                     type="title"
@@ -308,5 +229,3 @@ export default function App(props) {
     </div>
   );
 }
-
-// export default App;
