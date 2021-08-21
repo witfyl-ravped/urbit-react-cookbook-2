@@ -5,6 +5,7 @@ export default function App(props) {
   // const [urb, setUrb] = useState();
   const [sub, setSub] = useState();
   const [selectedLib, setSelectedLib] = useState();
+  const [selectedBook, setSelectedBook] = useState();
   const [libraryObject, setLibraryObject] = useState({Loading : "Waiting"});
 
   // Could not figure out how to make urb available by the time UI renders with useEffect. Someone school me please
@@ -89,7 +90,7 @@ export default function App(props) {
           )
         )
       } else {
-        comments = "No comments yet";
+        comments = {};
       }
 
       // Commit reduced graph info to state
@@ -184,6 +185,12 @@ export default function App(props) {
     });
   };
 
+  // Adding this so clear comment section when switching between libraries. Might be a cleaner way to do it?
+  const changeSelectedLib = (lib) => {
+    setSelectedBook(null);
+    setSelectedLib(lib);
+  }
+
   return (
     <div className="App">
       <header className="App-header">
@@ -220,7 +227,7 @@ export default function App(props) {
               {libraryObject.libraries ? Object.keys(libraryObject.libraries).map(lib =>(
                 <li>
                 <button
-                  onClick={() => setSelectedLib(lib)}
+                  onClick={() => changeSelectedLib(lib)}
                   key={lib}>
                     {lib}
                 </button>
@@ -256,8 +263,7 @@ export default function App(props) {
                     {Object.keys(libraryObject.libraries[selectedLib].books).map(index => (
                       <li> 
                         <button
-                          onClick={() => window.alert(`Comments for ${libraryObject.libraries[selectedLib].books[index].title}`)}
-                        >
+                          onClick={() => setSelectedBook(index)}>
                           Title: {libraryObject.libraries[selectedLib].books[index].title}&nbsp;
                           ISBN: {libraryObject.libraries[selectedLib].books[index].isbn}
                         </button>
@@ -275,6 +281,20 @@ export default function App(props) {
               <pre>
                 Comments
               </pre>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              {libraryObject.libraries && selectedBook
+              ? Object.keys(libraryObject.libraries[selectedLib].books[selectedBook].comments).map(index => (
+                <p>{
+                  libraryObject.libraries[selectedLib].books[selectedBook].comments[index]
+                  }
+                </p>
+              ))
+              // : libraryObject.libraries && selectedBook && Object.keys(libraryObject.libraries[selectedLib].books[selectedBook].comments).length === 0
+              //     ? "This book doesn't have any comments"
+              : null}
             </td>
           </tr>
         </table>
