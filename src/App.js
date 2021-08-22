@@ -260,15 +260,17 @@ export default function App(props) {
                       >Add Book</button>
                     </form>
                     <br/>
-                    {Object.keys(libraryObject.libraries[selectedLib].books).map(index => (
-                      <li> 
-                        <button
-                          onClick={() => setSelectedBook(index)}>
-                          Title: {libraryObject.libraries[selectedLib].books[index].title}&nbsp;
-                          ISBN: {libraryObject.libraries[selectedLib].books[index].isbn}
-                        </button>
-                      </li>
-                    ))}
+                    {libraryObject.libraries[selectedLib].books
+                      ? Object.keys(libraryObject.libraries[selectedLib].books).map(index => (
+                        <li> 
+                          <button
+                            onClick={() => setSelectedBook(index)}>
+                            Title: {libraryObject.libraries[selectedLib].books[index].title}&nbsp;
+                            ISBN: {libraryObject.libraries[selectedLib].books[index].isbn}
+                          </button>
+                        </li>
+                      ))
+                      : "No books yet"}
                   </>
                 : null}
               <br/>
@@ -285,15 +287,14 @@ export default function App(props) {
           </tr>
           <tr>
             <td>
-              {libraryObject.libraries && selectedBook
-              ? Object.keys(libraryObject.libraries[selectedLib].books[selectedBook].comments).map(index => (
-                <p>{
-                  libraryObject.libraries[selectedLib].books[selectedBook].comments[index]
-                  }
-                </p>
-              ))
-              // : libraryObject.libraries && selectedBook && Object.keys(libraryObject.libraries[selectedLib].books[selectedBook].comments).length === 0
-              //     ? "This book doesn't have any comments"
+              {selectedLib && selectedBook && Object.keys(libraryObject.libraries[selectedLib].books[selectedBook].comments).length > 0
+              ? Object.keys(libraryObject.libraries[selectedLib].books[selectedBook].comments).map(
+                key => (
+                  <p>{libraryObject.libraries[selectedLib].books[selectedBook].comments[key]}</p>
+                )
+              )
+              : selectedLib && selectedBook && Object.keys(libraryObject.libraries[selectedLib].books[selectedBook].comments).length == 0
+              ? "No Comments Yet"
               : null}
             </td>
           </tr>
