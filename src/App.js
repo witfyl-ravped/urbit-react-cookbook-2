@@ -156,11 +156,12 @@ export default function App(props) {
 
         Object.keys(update['graph-update']['add-nodes'].nodes)
 
-        console.log("Update is add-nodes, a book");
+        console.log("Update is adding nodes to existing library");
 
         Object.keys(nodes).forEach(
           node => {
             if(node.includes(metaId) && nodes[node].post.contents.length == 2){
+              console.log("New nodes are a book")
 
               setLibraryObject((prevLibraryObject) => ({
                 ...prevLibraryObject,
@@ -174,6 +175,31 @@ export default function App(props) {
                         title: nodes[node].post.contents[0].text,
                         isbn: nodes[node].post.contents[1].text,
                         comments: {}
+                      }
+                    }
+                  }
+                }
+              }))
+            } else {
+              console.log("New nodes are a comment:",
+                nodes[node].post.contents[0].text,
+                '/170141184505213433090407744871977713664/8319395793566789475/170141184505214459821810775234774564864'
+              )
+              // const commentToAdd = stateRef.current.libraries[destinationLibrary].books.node.substr(1, 39).comments
+              setLibraryObject((prevLibraryObject) => ({
+                ...prevLibraryObject,
+                libraries: {
+                  ...prevLibraryObject.libraries,
+                  [destinationLibrary]: {
+                    ...prevLibraryObject.libraries[destinationLibrary],
+                    books: {
+                      ...prevLibraryObject.libraries[destinationLibrary].books,
+                      [node.substr(1, 39)]: {
+                        ...prevLibraryObject.libraries[destinationLibrary].books[node.substr(1, 39)],
+                        comments: {
+                          ...prevLibraryObject.libraries[destinationLibrary].books[node.substr(1, 39)].comments,
+                          [node.substr(1, 39)]: nodes[node].post.contents[0].text
+                        }
                       }
                     }
                   }
@@ -321,7 +347,7 @@ export default function App(props) {
                   <p>{libraryObject.libraries[selectedLib].books[selectedBook].comments[key]}</p>
                 )
               )
-              : selectedLib && selectedBook && Object.keys(libraryObject.libraries[selectedLib].books[selectedBook].comments).length == 0
+              : selectedLib && selectedBook && Object.keys(libraryObject.libraries[selectedLib].books[selectedBook].comments).length === 0
               ? "No Comments Yet"
               : null}
             </td>
