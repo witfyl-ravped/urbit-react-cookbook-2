@@ -204,13 +204,17 @@ export default function App(props) {
 
       // Check to see if the update is notifiy of removed-posts
       // First compare to library names (graphs)
-      if(update['graph-update']['remove-graph'] && Object.keys(libraryObject.libraries).includes(update['graph-update']['remove-graph'].name)){
-        console.log("Removing", libraryObject.libraries[update['graph-update']['remove-graph'].name]);
 
-        delete libraryObject.libraries[(update['graph-update']['remove-graph'].name)];
+      if(update['graph-update']['remove-graph'] && Object.keys(stateRef.current.libraries).includes(update['graph-update']['remove-graph'].name)){
 
-        return
+        const newState = stateRef.current;
+        delete newState.libraries[(update['graph-update']['remove-graph'].name)];
+
+        setSelectedLib(null);
+        setLibraryObject(newState);
+
       }
+      console.log("After remove-graph if check");
 
       // Then check to see if it is a deleted book (posts)
       if(update['graph-update']['remove-posts'] && Object.keys(libraryObject.libraries).includes(update['graph-updates']['remove-posts'].resource.name)){
@@ -248,6 +252,18 @@ export default function App(props) {
       }
     });
   };
+
+  const removeLibrary = (library) => {
+    urb.poke({
+      app: 'library-proxy',
+      mark: 'library-frontend',
+      json: {
+        'remove-library': {
+          'library-name': library
+        }
+      }
+    })
+  }
 
   const addBook = (title, isbn) => {
     console.log(selectedLib, title, isbn);
@@ -299,7 +315,17 @@ export default function App(props) {
             </td>
             <td>
               {/* Display selected library over books component */}
-              <pre>{selectedLib ? selectedLib : "Select a Library"}</pre>
+              <pre>{selectedLib 
+              ? 
+              <>
+              {selectedLib}
+              <br/>               
+                <button
+                  onClick={() => removeLibrary(selectedLib)}>
+                  Remove
+                </button><br/>
+              </>
+              : "Select a Library"}</pre>
             </td>
           </tr>
           <tr>
