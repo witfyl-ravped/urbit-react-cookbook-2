@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import './App.css';
 
 export default function App(props) {
@@ -6,7 +6,10 @@ export default function App(props) {
   const [sub, setSub] = useState();
   const [selectedLib, setSelectedLib] = useState();
   const [selectedBook, setSelectedBook] = useState();
-  const [libraryObject, setLibraryObject] = useState({Loading : "Waiting"});
+  const [libraryObject, setLibraryObject] = useState({libraries: {}});
+  const stateRef = useRef();
+
+  stateRef.current = libraryObject;
 
   // Could not figure out how to make urb available by the time UI renders with useEffect. Someone school me please
   const urb = props.api;
@@ -94,14 +97,14 @@ export default function App(props) {
       }
 
       // Commit reduced graph info to state
-      setLibraryObject((previousLibraryObject) => ({
-        ...previousLibraryObject,
+      setLibraryObject((prevLibraryObject) => ({
+        ...prevLibraryObject,
         libraries: {
-          ...previousLibraryObject.libraries,
+          ...prevLibraryObject.libraries,
           [destinationLibrary]: {
-            ...previousLibraryObject.libraries[destinationLibrary],
+            ...prevLibraryObject.libraries[destinationLibrary],
             books: {
-              ...previousLibraryObject.libraries[destinationLibrary].books,
+              ...prevLibraryObject.libraries[destinationLibrary].books,
               [index]: {
                 title: bookName,
                 isbn: ISBN,
@@ -110,8 +113,7 @@ export default function App(props) {
             }
           }
         }
-      }))
-
+      }))      
     })
   }
 
@@ -121,39 +123,65 @@ export default function App(props) {
 
   const updateHandler = useCallback(
     (update) => {
+    console.log("New graph", update);
 
       // Check if new graph is a library
       if(update['graph-update']['add-graph'] && update['graph-update']['add-graph']['mark'] == "graph-validator-library"){
         const newLib = update['graph-update']['add-graph']['resource'];
+
+        // console.log("New graph is a library", newLib);
   
       // If so then add to local library object to check against books below
         newLibraries = {
           ...newLibraries,
           [newLib.name]: newLib
         }
+
+        setLibraryObject((prevLibraryObject) => ({
+          ...prevLibraryObject,
+          libraries: {
+            ...prevLibraryObject.libraries,
+            [newLib.name]: {}
+          }
+        }))
+
+        return
       }
 
       // Check if new add-nodes is a book
-      if(update['graph-update']['add-nodes'] && Object.keys(newLibraries).includes(update['graph-update']['add-nodes'].resource.name)){
+      if(update['graph-update']['add-nodes'] && Object.keys(stateRef.current.libraries).includes(update['graph-update']['add-nodes'].resource.name)){
+
         const nodes = update['graph-update']['add-nodes'].nodes;
-        const newBookLib = update['graph-update']['add-nodes'].resource.name;
+        const destinationLibrary = update['graph-update']['add-nodes'].resource.name;
+
+        Object.keys(update['graph-update']['add-nodes'].nodes)
+
+        console.log("Update is add-nodes, a book");
 
         Object.keys(nodes).forEach(
           node => {
-            if(nodes[node].post.contents.length == 2){
-              newBook = {
-                ...newBook,
-                [nodes[node].post.contents[0].text]: {
-                  top: node.substr(1, 39),
-                  isbn: nodes[node].post.contents[1].text,
-                  comments: {}
+            if(node.includes(metaId) && nodes[node].post.contents.length == 2){
+
+              setLibraryObject((prevLibraryObject) => ({
+                ...prevLibraryObject,
+                libraries: {
+                  ...prevLibraryObject.libraries,
+                  [destinationLibrary]: {
+                    ...prevLibraryObject.libraries[destinationLibrary],
+                    books: {
+                      ...prevLibraryObject.libraries[destinationLibrary].books,
+                      [node.substr(1, 39)]: {
+                        title: nodes[node].post.contents[0].text,
+                        isbn: nodes[node].post.contents[1].text,
+                        comments: {}
+                      }
+                    }
+                  }
                 }
-              }
+              }))
             }
           }
         )
-
-        newLibraries[newBookLib] = newBook;
       }
     },[]);
 
