@@ -181,11 +181,6 @@ export default function App(props) {
                 }
               }))
             } else {
-              console.log("New nodes are a comment:",
-                nodes[node].post.contents[0].text,
-                '/170141184505213433090407744871977713664/8319395793566789475/170141184505214459821810775234774564864'
-              )
-              // const commentToAdd = stateRef.current.libraries[destinationLibrary].books.node.substr(1, 39).comments
               setLibraryObject((prevLibraryObject) => ({
                 ...prevLibraryObject,
                 libraries: {
