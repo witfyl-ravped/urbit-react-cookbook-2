@@ -200,11 +200,12 @@ export default function App(props) {
             }
           }))
         }
+
+        return
       }
 
       // Check to see if the update is notifiy of removed-posts
       // First compare to library names (graphs)
-
       if(update['graph-update']['remove-graph'] && Object.keys(stateRef.current.libraries).includes(update['graph-update']['remove-graph'].name)){
 
         const newState = stateRef.current;
@@ -214,7 +215,6 @@ export default function App(props) {
         setLibraryObject(newState);
 
       }
-      console.log("After remove-graph if check");
 
       // Then check to see if it is a deleted book (posts)
       if(update['graph-update']['remove-posts'] && Object.keys(libraryObject.libraries).includes(update['graph-updates']['remove-posts'].resource.name)){
@@ -385,7 +385,7 @@ export default function App(props) {
           <tr>
             <td>
               <pre>
-                Comments
+                Comments {libraryObject.libraries && selectedLib && selectedBook ? <>for {libraryObject.libraries[selectedLib].books[selectedBook].title}</> : null}
               </pre>
             </td>
           </tr>
