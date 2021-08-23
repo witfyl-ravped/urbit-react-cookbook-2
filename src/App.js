@@ -118,24 +118,16 @@ export default function App(props) {
   }
 
   // This section monitors updates that happen after page loads
-  let newLibraries = {};
-  let newBook = {};
 
   const updateHandler = useCallback(
     (update) => {
     console.log("New graph", update);
 
       // Check if new graph is a library
-      if(update['graph-update']['add-graph'] && update['graph-update']['add-graph']['mark'] == "graph-validator-library"){
+      if(update['graph-update']['add-graph'] && update['graph-update']['add-graph']['mark'] === "graph-validator-library"){
         const newLib = update['graph-update']['add-graph']['resource'];
 
         // console.log("New graph is a library", newLib);
-  
-      // If so then add to local library object to check against books below
-        newLibraries = {
-          ...newLibraries,
-          [newLib.name]: newLib
-        }
 
         setLibraryObject((prevLibraryObject) => ({
           ...prevLibraryObject,
@@ -160,7 +152,7 @@ export default function App(props) {
 
         Object.keys(nodes).forEach(
           node => {
-            if(node.includes(metaId) && nodes[node].post.contents.length == 2){
+            if(node.includes(metaId) && nodes[node].post.contents.length === 2){
               console.log("New nodes are a book")
 
               setLibraryObject((prevLibraryObject) => ({
@@ -180,29 +172,52 @@ export default function App(props) {
                   }
                 }
               }))
-            } else {
-              setLibraryObject((prevLibraryObject) => ({
-                ...prevLibraryObject,
-                libraries: {
-                  ...prevLibraryObject.libraries,
-                  [destinationLibrary]: {
-                    ...prevLibraryObject.libraries[destinationLibrary],
-                    books: {
-                      ...prevLibraryObject.libraries[destinationLibrary].books,
-                      [node.substr(1, 39)]: {
-                        ...prevLibraryObject.libraries[destinationLibrary].books[node.substr(1, 39)],
-                        comments: {
-                          ...prevLibraryObject.libraries[destinationLibrary].books[node.substr(1, 39)].comments,
-                          [node.substr(1, 39)]: nodes[node].post.contents[0].text
-                        }
-                      }
-                    }
-                  }
-                }
-              }))
             }
           }
         )
+
+        // Comments only have one node so we use that to check if the nodes are for a comment
+        if(Object.keys(nodes).length < 4){
+          const node = Object.keys(nodes)[0];
+          
+          setLibraryObject((prevLibraryObject) => ({
+            ...prevLibraryObject,
+            libraries: {
+              ...prevLibraryObject.libraries,
+              [destinationLibrary]: {
+                ...prevLibraryObject.libraries[destinationLibrary],
+                books: {
+                  ...prevLibraryObject.libraries[destinationLibrary].books,
+                  [node.substr(1, 39)]: {
+                    ...prevLibraryObject.libraries[destinationLibrary].books[node.substr(1, 39)],
+                    comments: {
+                      ...prevLibraryObject.libraries[destinationLibrary].books[node.substr(1, 39)].comments,
+                      [node.substr(1, 39)]: nodes[node].post.contents[0].text
+                    }
+                  }
+                }
+              }
+            }
+          }))
+        }
+      }
+
+      // Check to see if the update is notifiy of removed-posts
+      // First compare to library names (graphs)
+      if(update['graph-update']['remove-graph'] && Object.keys(libraryObject.libraries).includes(update['graph-update']['remove-graph'].name)){
+        console.log("Removing", libraryObject.libraries[update['graph-update']['remove-graph'].name]);
+
+        delete libraryObject.libraries[(update['graph-update']['remove-graph'].name)];
+
+        return
+      }
+
+      // Then check to see if it is a deleted book (posts)
+      if(update['graph-update']['remove-posts'] && Object.keys(libraryObject.libraries).includes(update['graph-updates']['remove-posts'].resource.name)){
+        console.log("Removing", update['graph-updates']['remove-posts'].resource.name);
+
+        delete libraryObject.libraries[update['graph-updates']['remove-posts'].resource.name];
+        
       }
     },[]);
 
@@ -233,6 +248,23 @@ export default function App(props) {
       }
     });
   };
+
+  const addBook = (title, isbn) => {
+    console.log(selectedLib, title, isbn);
+    urb.poke({
+      app: 'library-proxy',
+      mark: 'library-frontend',
+      json: {
+        'add-book': {
+          'library-name': selectedLib,
+          'book': {
+            title,
+            isbn
+          }
+        }
+      }
+    })
+  }
 
   // Adding this so clear comment section when switching between libraries. Might be a cleaner way to do it?
   const changeSelectedLib = (lib) => {
@@ -293,8 +325,7 @@ export default function App(props) {
                         e.preventDefault();
                         const title = e.target.title.value;
                         const isbn = e.target.isbn.value;
-                        // addBook(selectedLib, title, isbn);
-                        console.log("Add book with");
+                        addBook(title, isbn);
                       }}>
                       <input
                         type="title"
@@ -304,9 +335,7 @@ export default function App(props) {
                         type="isbn"
                         name="isbn"
                         placeholder="ISBN"/><br/>
-                      <button
-                      onClick={() => window.alert("Add book function")}
-                      >Add Book</button>
+                      <button>Add Book</button>
                     </form>
                     <br/>
                     {libraryObject.libraries[selectedLib].books
