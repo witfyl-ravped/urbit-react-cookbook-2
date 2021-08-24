@@ -177,6 +177,7 @@ export default function App(props) {
         )
 
         // Comments only have one node so we use that to check if the nodes are for a comment
+        // /170141184505216611005613062488886083584/8319395793566789475/170141184505216611950670644819471106048
         if(Object.keys(nodes).length < 4){
           const node = Object.keys(nodes)[0];
           
@@ -192,7 +193,7 @@ export default function App(props) {
                     ...prevLibraryObject.libraries[destinationLibrary].books[node.substr(1, 39)],
                     comments: {
                       ...prevLibraryObject.libraries[destinationLibrary].books[node.substr(1, 39)].comments,
-                      [node.substr(1, 39)]: nodes[node].post.contents[0].text
+                      [node.substr(61)]: nodes[node].post.contents[0].text
                     }
                   }
                 }
@@ -277,6 +278,21 @@ export default function App(props) {
             title,
             isbn
           }
+        }
+      }
+    })
+  }
+
+  const addComment = (comment) => {
+    console.log(selectedBook, selectedLib);
+    urb.poke({
+      app: 'library-proxy',
+      mark: 'library-frontend',
+      json: {
+        'add-comment': {
+          'library-name': selectedLib,
+          'top': selectedBook,
+          'comment': comment
         }
       }
     })
@@ -387,6 +403,26 @@ export default function App(props) {
               <pre>
                 Comments {libraryObject.libraries && selectedLib && selectedBook ? <>for {libraryObject.libraries[selectedLib].books[selectedBook].title}</> : null}
               </pre>
+            </td>
+          </tr>
+          <tr>
+            <td>
+            {libraryObject.libraries && selectedLib && selectedBook ? <>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const comment = e.target.comment.value;
+                  addComment(comment);
+                }}
+              >
+                <input
+                  type="comment"
+                  name="comment"
+                  placeholder="Comment"
+                />
+                <button>Add Comment</button>
+              </form>
+            </> : null}
             </td>
           </tr>
           <tr>
