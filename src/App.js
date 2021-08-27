@@ -73,7 +73,7 @@ export default function App(props) {
   }
 
   const addBooksToState = (graph) => {
-    // console.log(graph);
+    console.log(graph);
 
     Object.keys(graph['graph-update']['add-graph'].graph).forEach(index => {
       // Destructure basic info from book entry
@@ -84,11 +84,15 @@ export default function App(props) {
 
       // Check if book has comments and add them to comments object
       if(graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children){
+        console.log(graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children);
         Object.keys(graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children).forEach(
           key => (
             comments = {
               ...comments,
-              [key]: graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children[key].post.contents[0].text
+              [key]:
+                // text: graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children[key].post.contents[0].text,
+                // author: graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children[key].post.author
+                graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children[key].post
             }
           )
         )
@@ -177,9 +181,9 @@ export default function App(props) {
         )
 
         // Comments only have one node so we use that to check if the nodes are for a comment
-        // /170141184505216611005613062488886083584/8319395793566789475/170141184505216611950670644819471106048
         if(Object.keys(nodes).length < 4){
           const node = Object.keys(nodes)[0];
+          console.log("New comments", nodes);
           
           setLibraryObject((prevLibraryObject) => ({
             ...prevLibraryObject,
@@ -193,7 +197,8 @@ export default function App(props) {
                     ...prevLibraryObject.libraries[destinationLibrary].books[node.substr(1, 39)],
                     comments: {
                       ...prevLibraryObject.libraries[destinationLibrary].books[node.substr(1, 39)].comments,
-                      [node.substr(61)]: nodes[node].post.contents[0].text
+                      [node.substr(61)]: 
+                        nodes[node].post
                     }
                   }
                 }
@@ -217,13 +222,39 @@ export default function App(props) {
 
       }
 
-      // Then check to see if it is a deleted book (posts)
-      if(update['graph-update']['remove-posts'] && Object.keys(libraryObject.libraries).includes(update['graph-updates']['remove-posts'].resource.name)){
-        console.log("Removing", update['graph-updates']['remove-posts'].resource.name);
+      // Then check to see if it is a deleted comment (post)
+      console.log(update['graph-update']['remove-posts']);
+      if(update['graph-update']['remove-posts'] && update['graph-update']['remove-posts'].indices[0].includes("8319395793566789475")){
+        console.log("Comment removed");
+        const comIndex = update['graph-update']['remove-posts'].indices[0].substr(61);
 
-        delete libraryObject.libraries[update['graph-updates']['remove-posts'].resource.name];
-        
+        Object.keys(stateRef.current.libraries).forEach(
+          library => (
+            Object.keys(stateRef.current.libraries[library].books).forEach(
+              book => {
+                Object.keys(stateRef.current.libraries[library].books[book].comments).forEach(
+                  comment => {
+                    if(comment === comIndex){
+                      console.log(stateRef.current.libraries[library].books[book].comments[comIndex].text);
+
+                      const newState = stateRef.current;
+                      newState.libraries[library].books[book].comments[comIndex] = "Comment Deleted";
+                      setLibraryObject(newState);
+                    }
+                  }
+                )
+              }
+            )
+          )
+        )
       }
+
+      // if(update['graph-update']['remove-posts'] && Object.keys(libraryObject.libraries).includes(update['graph-updates']['remove-posts'].resource.name)){
+      //   console.log("Removing", update['graph-updates']['remove-posts'].resource.name);
+
+      //   delete libraryObject.libraries[update['graph-updates']['remove-posts'].resource.name];
+        
+      // }
     },[]);
 
   useEffect(() => {
@@ -293,6 +324,20 @@ export default function App(props) {
           'library-name': selectedLib,
           'top': selectedBook,
           'comment': comment
+        }
+      }
+    })
+  }
+
+  const removeComment = (comment) => {
+    console.log([selectedBook.toString(), '8319395793566789475', comment.toString()]);
+    urb.poke({
+      app: 'library-proxy',
+      mark: 'library-frontend',
+      json: {
+        'remove-comment': {
+          'library-name': selectedLib,
+          'index': [selectedBook.toString(), '8319395793566789475', comment.toString()]
         }
       }
     })
@@ -430,7 +475,22 @@ export default function App(props) {
               {selectedLib && selectedBook && Object.keys(libraryObject.libraries[selectedLib].books[selectedBook].comments).length > 0
               ? Object.keys(libraryObject.libraries[selectedLib].books[selectedBook].comments).map(
                 key => (
-                  <p>{libraryObject.libraries[selectedLib].books[selectedBook].comments[key]}</p>
+                  <>
+                    <p>
+                      {libraryObject.libraries[selectedLib].books[selectedBook].comments[key].contents
+                      ? <>
+                          {libraryObject.libraries[selectedLib].books[selectedBook].comments[key].author}:
+                          {libraryObject.libraries[selectedLib].books[selectedBook].comments[key].contents[0].text}&nbsp;
+                          <button
+                            onClick={() => removeComment(key)}
+                          >
+                          Remove
+                        </button>
+                        </>                 
+                      : "Comment Deleted"
+                      }
+                    </p>
+                  </>
                 )
               )
               : selectedLib && selectedBook && Object.keys(libraryObject.libraries[selectedLib].books[selectedBook].comments).length === 0
