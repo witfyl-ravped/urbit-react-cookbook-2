@@ -48,7 +48,7 @@ export default function App(props) {
     .then(graph => {
       // console.log(graph)
       
-      // Checks for library validator mark
+      // Checks graph for library validator mark
       if(graph['graph-update']['add-graph'].mark === "graph-validator-library") {
         // console.log(`${graph['graph-update']['add-graph'].resource.name} is a library`);
 
@@ -183,7 +183,7 @@ export default function App(props) {
         // Comments only have one node so we use that to check if the nodes are for a comment
         if(Object.keys(nodes).length < 4){
           const node = Object.keys(nodes)[0];
-          console.log("New comments", nodes);
+          // console.log("New comments", nodes);
           
           setLibraryObject((prevLibraryObject) => ({
             ...prevLibraryObject,
@@ -223,7 +223,6 @@ export default function App(props) {
       }
 
       // Then check to see if it is a deleted comment (post)
-      console.log(update['graph-update']['remove-posts']);
       if(update['graph-update']['remove-posts'] && update['graph-update']['remove-posts'].indices[0].includes("8319395793566789475")){
         console.log("Comment removed");
         const comIndex = update['graph-update']['remove-posts'].indices[0].substr(61);
@@ -234,12 +233,27 @@ export default function App(props) {
               book => {
                 Object.keys(stateRef.current.libraries[library].books[book].comments).forEach(
                   comment => {
-                    if(comment === comIndex){
-                      console.log(stateRef.current.libraries[library].books[book].comments[comIndex].text);
-
-                      const newState = stateRef.current;
-                      newState.libraries[library].books[book].comments[comIndex] = "Comment Deleted";
-                      setLibraryObject(newState);
+                    if(comment == comIndex){
+                      // Couldn't get setState to re-render without doing it this long hand way. Do I need lodash here?
+                      setLibraryObject(prevLibraryObject => ({
+                        ...prevLibraryObject,
+                        libraries: {
+                          ...prevLibraryObject.libraries,
+                          [library]: {
+                            ...prevLibraryObject.libraries[library],
+                            books: {
+                              ...prevLibraryObject.libraries[library].books,
+                              [book]: {
+                                ...prevLibraryObject.libraries[library].books[book],
+                                comments: {
+                                  ...prevLibraryObject.libraries[library].books[book].comments,
+                                  [comIndex]: {}
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }));
                     }
                   }
                 )
@@ -248,13 +262,6 @@ export default function App(props) {
           )
         )
       }
-
-      // if(update['graph-update']['remove-posts'] && Object.keys(libraryObject.libraries).includes(update['graph-updates']['remove-posts'].resource.name)){
-      //   console.log("Removing", update['graph-updates']['remove-posts'].resource.name);
-
-      //   delete libraryObject.libraries[update['graph-updates']['remove-posts'].resource.name];
-        
-      // }
     },[]);
 
   useEffect(() => {
