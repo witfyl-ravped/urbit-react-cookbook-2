@@ -27,11 +27,8 @@ export default function App(props) {
       path: '/keys'
     })
     .then(keys => {
-      // console.log(keys)
-      // console.log(keys['graph-update'])
       keys['graph-update'].keys.forEach(key => {
         if(!key.name.includes(" ")){
-          // console.log(key);
           scryKey(key.name);
         }
       })
@@ -40,17 +37,14 @@ export default function App(props) {
 
   // Checks keys from useEffect scry to see if they are libraries and adds reduced graph to state object if yes
   const scryKey = (key) => {
-    // console.log("Scrying key", key);
     urb.scry({
       app: 'graph-store',
       path: `/graph/~zod/${key}`
     })
     .then(graph => {
-      // console.log(graph)
       
       // Checks graph for library validator mark
       if(graph['graph-update']['add-graph'].mark === "graph-validator-library") {
-        // console.log(`${graph['graph-update']['add-graph'].resource.name} is a library`);
 
         // Add to library state object
         setLibraryObject((prevLibraryObject) => ({
@@ -64,7 +58,7 @@ export default function App(props) {
           }
         }));
 
-        // Checks to see if library has books
+        // Then check to see if library has books
         if(Object.keys(graph['graph-update']['add-graph'].graph).length > 0) {
           addBooksToState(graph);
         }
@@ -76,6 +70,7 @@ export default function App(props) {
     console.log(graph);
 
     Object.keys(graph['graph-update']['add-graph'].graph).forEach(index => {
+
       // Destructure basic info from book entry
       const bookName = graph['graph-update']['add-graph'].graph[index].children[metaId].children[1].post.contents[0].text;
       const ISBN = graph['graph-update']['add-graph'].graph[index].children[metaId].children[1].post.contents[1].text;
@@ -90,8 +85,6 @@ export default function App(props) {
             comments = {
               ...comments,
               [key]:
-                // text: graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children[key].post.contents[0].text,
-                // author: graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children[key].post.author
                 graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children[key].post
             }
           )
@@ -122,7 +115,6 @@ export default function App(props) {
   }
 
   // This section monitors updates that happen after page loads
-
   const updateHandler = useCallback(
     (update) => {
     console.log("New graph", update);
@@ -227,6 +219,7 @@ export default function App(props) {
         console.log("Comment removed");
         const comIndex = update['graph-update']['remove-posts'].indices[0].substr(61);
 
+        // Iterate over keys of each state object until we can check the comment index against the currently selected book
         Object.keys(stateRef.current.libraries).forEach(
           library => (
             Object.keys(stateRef.current.libraries[library].books).forEach(
@@ -269,6 +262,19 @@ export default function App(props) {
       app: 'graph-store',
       path: '/updates',
       event: updateHandler,
+      err: console.log,
+      quit: console.log,
+    })
+    .then((subscriptionId) => {
+      setSub(subscriptionId);
+    });
+  }, []);
+
+  useEffect(() => {
+    urb.subscribe({
+      app: 'library-proxy',
+      path: '/test',
+      event: console.log,
       err: console.log,
       quit: console.log,
     })
