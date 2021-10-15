@@ -305,7 +305,6 @@ export default function App(props) {
   }
 
   const addBook = (title, isbn) => {
-    console.log(selectedLib, title, isbn);
     urb.poke({
       app: 'library-proxy',
       mark: 'library-frontend',
@@ -322,7 +321,6 @@ export default function App(props) {
   }
 
   const addComment = (comment) => {
-    console.log(selectedBook, selectedLib);
     urb.poke({
       app: 'library-proxy',
       mark: 'library-frontend',
@@ -337,7 +335,6 @@ export default function App(props) {
   }
 
   const removeComment = (comment) => {
-    console.log([selectedBook.toString(), '8319395793566789475', comment.toString()]);
     urb.poke({
       app: 'library-proxy',
       mark: 'library-frontend',
