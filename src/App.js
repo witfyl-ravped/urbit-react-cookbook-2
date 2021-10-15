@@ -4,9 +4,9 @@ import './App.css';
 export default function App(props) {
   // const [urb, setUrb] = useState();
   const [sub, setSub] = useState();
+  const [libraryObject, setLibraryObject] = useState({libraries: {}});
   const [selectedLib, setSelectedLib] = useState();
   const [selectedBook, setSelectedBook] = useState();
-  const [libraryObject, setLibraryObject] = useState({libraries: {}});
   const stateRef = useRef();
 
   stateRef.current = libraryObject;
@@ -67,7 +67,6 @@ export default function App(props) {
   }
 
   const addBooksToState = (graph) => {
-    console.log(graph);
 
     Object.keys(graph['graph-update']['add-graph'].graph).forEach(index => {
 
@@ -79,7 +78,6 @@ export default function App(props) {
 
       // Check if book has comments and add them to comments object
       if(graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children){
-        console.log(graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children);
         Object.keys(graph['graph-update']['add-graph'].graph[index].children['8319395793566789475'].children).forEach(
           key => (
             comments = {
@@ -123,8 +121,6 @@ export default function App(props) {
       if(update['graph-update']['add-graph'] && update['graph-update']['add-graph']['mark'] === "graph-validator-library"){
         const newLib = update['graph-update']['add-graph']['resource'];
 
-        // console.log("New graph is a library", newLib);
-
         setLibraryObject((prevLibraryObject) => ({
           ...prevLibraryObject,
           libraries: {
@@ -136,13 +132,11 @@ export default function App(props) {
         return
       }
 
-      // Check if new add-nodes is a book
+      // Check if new add-nodes is a book or comment
       if(update['graph-update']['add-nodes'] && Object.keys(stateRef.current.libraries).includes(update['graph-update']['add-nodes'].resource.name)){
 
         const nodes = update['graph-update']['add-nodes'].nodes;
         const destinationLibrary = update['graph-update']['add-nodes'].resource.name;
-
-        Object.keys(update['graph-update']['add-nodes'].nodes)
 
         console.log("Update is adding nodes to existing library");
 
@@ -203,7 +197,7 @@ export default function App(props) {
       }
 
       // Check to see if the update is notifiy of removed-posts
-      // First compare to library names (graphs)
+      // First compare to library names (graphs), if it matches a library name then delete it from our state
       if(update['graph-update']['remove-graph'] && Object.keys(stateRef.current.libraries).includes(update['graph-update']['remove-graph'].name)){
 
         const newState = stateRef.current;
@@ -273,7 +267,7 @@ export default function App(props) {
   useEffect(() => {
     urb.subscribe({
       app: 'library-proxy',
-      path: '/test',
+      path: '/libraries',
       event: console.log,
       err: console.log,
       quit: console.log,
