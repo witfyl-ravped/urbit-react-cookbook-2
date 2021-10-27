@@ -168,4 +168,4 @@ If the book has comments, we'll add it to the comments object declared in the pr
 
 Finally we're ready to push everything into our `libraryObject` in state. Again I'm making the choice to give `libraries` a list of keys that are each libraries names (`destinationLibrary` in this case). These keys are themselves objects that contain a list of keys that are books. These keys are also objects that are a list of numerical keys containing the book's name, ISBN, and comments object.
 
-### Continue to [Part 3](https://github.com/witfyl-ravped/library-ui/blob/graphStoreSub/Part3.md)
+### Continue to [Part 3](https://github.com/witfyl-ravped/urbit-react-cookbook-2/blob/master/Part3.md)

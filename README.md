@@ -24,13 +24,13 @@ If that doesn't make sense yet, just remember that React has two jobs:
 
 ## Installing the Library app
 
-In order to communicate with the Library app I had to make some adjustments to accept incoming JSON from our interface. You can find the [modified files here](https://github.com/witfyl-ravped/library-ui/tree/graphStoreSub/witfyl-mods). Install them on your ship and then take some time to run with `~sipfyn`'s instructions on how to use the app in dojo. That will give you an understanding of what his app currently does and more reserouces to read up on how graph store works under the hood.
+In order to communicate with the Library app I had to make some adjustments to accept incoming JSON from our interface. You can find the [modified files here](https://github.com/witfyl-ravped/urbit-react-cookbook-2/tree/master/witfyl-mods). Install them on your ship and then take some time to run with `~sipfyn`'s instructions on how to use the app in dojo. That will give you an understanding of what his app currently does and more reserouces to read up on how graph store works under the hood.
 
 It is also important <b>to add multiple libraries and books and to comment on some or all of those books</b> to your ship before beginning. The lesson jumps right in to migrating library state to React, so be sure to add some before proceeding. You'll find the instructions to do so in `~sipfyn`'s documentation. 
 
 ### Connecting to UI
 
-After installing the Library app on your ship you can download the UI from [https://github.com/witfyl-ravped/library-ui/tree/graphStoreSub/src](this repo) and follow the instructions from [https://github.com/witfyl-ravped/urbit-react-cookbook](Chapter 1) to establish connection between your ship and the local React server running the UI.
+After installing the Library app on your ship you can download the UI from [https://github.com/witfyl-ravped/urbit-react-cookbook-2/tree/master/src](this repo) and follow the instructions from [https://github.com/witfyl-ravped/urbit-react-cookbook](Chapter 1) to establish connection between your ship and the local React server running the UI.
 
 Once it's up you can see that our example UI allows you to create libraries, add books, add and delete comments, as well as remove whole libraries. All the local commands that you ran from `dojo`, give them all a try.
 
@@ -44,4 +44,4 @@ It's important to remember this framework as the scope of our React tutorial. Bu
 
 Finally you'll notice we're not using any reducers in the JavaScript. It may be cumbersome to read through the long nested lookups, but we decided to leave them in to help you grok the structure of `graphs`. Even though they have been converted to JSON, this is still the same architecture you'll find in `graph-store` itself.
 
-### Continue to [Part 2](https://github.com/witfyl-ravped/library-ui/blob/graphStoreSub/Part2.md)
+### Continue to [Part 2](https://github.com/witfyl-ravped/urbit-react-cookbook-2/blob/master/Part2.md)
