@@ -119,7 +119,9 @@ The first step is to cycle through each book's `graph` using `Object.keys` like 
 
 Book Name and ISBN are classified as metadata for each book. Since that's what we're looking to pull we know that we'll want to use the `@ud` for the word meta.
 
-The last note here is that we'll want a local variable of the library name to which this book belongs to help us add it to our state object in a following step. That's what `destinationLibrary` is. Finally we make an empty variable `comments` here so it is in scope of the function we'll use to push to our state. We'll use it in the next step:
+The last note here is that we'll want a local variable of the library name to which this book belongs to help us add it to our state object in a following step. That's what `destinationLibrary` is. Finally we make an empty variable `comments` here so it is in scope of the function we'll use to push to our state. We'll use it in the next step.
+
+### Adding Comments to State
 
 
 ```
@@ -166,4 +168,4 @@ If the book has comments, we'll add it to the comments object declared in the pr
 
 Finally we're ready to push everything into our `libraryObject` in state. Again I'm making the choice to give `libraries` a list of keys that are each libraries names (`destinationLibrary` in this case). These keys are themselves objects that contain a list of keys that are books. These keys are also objects that are a list of numerical keys containing the book's name, ISBN, and comments object.
 
-### Continue to [Part 3](http://part3.com)
+### Continue to [Part 3](https://github.com/witfyl-ravped/library-ui/blob/graphStoreSub/Part3.md)

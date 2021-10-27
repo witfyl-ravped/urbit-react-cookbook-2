@@ -213,4 +213,4 @@ If we have a match then you can notice my comment that I am once again manually 
 
 And that does it migrating our `ship`'s state to React! In the next section we'll cover creating React functions to `poke` our `gall agent` with JSON commands. It will look very similar to the UI we created for `Landscape` in Chapter 1, and allow our web users to interact with our library app.
 
-### Continue to [Part 4](http://part4.com)
+### Continue to [Part 4](https://github.com/witfyl-ravped/library-ui/blob/graphStoreSub/Part4.md)
